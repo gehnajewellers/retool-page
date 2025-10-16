@@ -140,7 +140,7 @@
       document.getElementById("status").innerText = "⏳ Updating prices...";
 
       try {
-        const res = await fetch("https://retool-server.vercel.app/update-prices", {
+        const res = await fetch("https://retool-server.vercel.app/api/update-prices", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
