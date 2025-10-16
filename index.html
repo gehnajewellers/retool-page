@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update All Product Prices</title>
+  <style>
+    body {
+      background-color: #111;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-image: radial-gradient(circle at top left, rgba(255,215,0,0.05), transparent 60%);
+    }
+
+    .container {
+      background: #1a1a1a;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 12px;
+      padding: 32px 28px;
+      width: 360px;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.08);
+    }
+
+    .title {
+      text-align: center;
+      color: #f9d67a;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+
+    .block {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 18px;
+    }
+
+    label {
+      color: #e8e6e3;
+      font-size: 15px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input {
+      padding: 10px 12px;
+      background-color: #111;
+      border: 1px solid #555;
+      border-radius: 8px;
+      color: #fefefe;
+      font-size: 16px;
+      outline: none;
+      transition: 0.3s border, 0.3s box-shadow;
+    }
+
+    input:focus {
+      border-color: #d4af37;
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 16px;
+      background: linear-gradient(90deg, #b7934c, #d4af37);
+      color: #111;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #d9b757, #ffe28a);
+      transform: translateY(-1px);
+    }
+
+    #status {
+      text-align: center;
+      margin-top: 18px;
+      color: #ccc;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    @media (max-width: 420px) {
+      .container {
+        margin: 0 16px;
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="title">Bulk Price Update</h2>
+    <form id="rateForm">
+      <div class="block">
+        <label>Gold Rate 14KT (₹/gm):</label>
+        <input type="number" id="gold_rate_14" required>
+      </div>
+      <div class="block">
+        <label>Gold Rate 18KT (₹/gm):</label>
+        <input type="number" id="gold_rate_18" required>
+      </div>
+      <div class="block">
+        <label>Labour Rate for greater than 5gm (₹/gm):</label>
+        <input type="number" id="labour_rate_greater" required>
+      </div>
+      <div class="block">
+        <label>Labour Rate for less than 5gm (₹/gm):</label>
+        <input type="number" id="labour_rate_less" required>
+      </div>
+      <div class="block">
+        <label>GST (%):</label>
+        <input type="number" id="gst_rate" required>
+      </div>
+      <button type="submit">Update All Products</button>
+    </form>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    document.getElementById("rateForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const gold_rate_14 = parseFloat(document.getElementById("gold_rate_14").value);
+      const gold_rate_18 = parseFloat(document.getElementById("gold_rate_18").value);
+      const labour_rate_less = parseFloat(document.getElementById("labour_rate_less").value);
+      const labour_rate_greater = parseFloat(document.getElementById("labour_rate_greater").value);
+      const gst_rate = parseFloat(document.getElementById("gst_rate").value);
+
+      document.getElementById("status").innerText = "⏳ Updating prices...";
+
+      try {
+        const res = await fetch("http://localhost:3000/update-prices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          document.getElementById("status").innerText = `✅ Updated ${result.updatedCount} products successfully!`;
+        } else {
+          document.getElementById("status").innerText = `❌ Error: ${result.error}`;
+        }
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ Something went wrong!";
+      }
+    });
+  </script>
+</body>
+</html>
