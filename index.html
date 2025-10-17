@@ -124,10 +124,24 @@
       </div>
       <button type="submit">Update All Products</button>
     </form>
+    <button class="get-product"></button>
     <p id="status"></p>
   </div>
 
   <script>
+
+    document.querySelector('.get-product').addEventListener('click' , async()=>{
+        try{
+            const res = await fetch("https://retool-server.vercel.app/api/get-product-ids");
+            const data = await res.json();
+            const allProducts = data.products;
+            console.log(allProducts);
+        }catch(err){
+            console.error("Error while fetching:", err);
+        }
+    })
+
+    // posting the form data
     document.getElementById("rateForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
