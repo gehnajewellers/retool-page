@@ -196,7 +196,7 @@
                     const batchRes = await fetch("https://retool-server.vercel.app/api/update-products-batch", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ products: batch, gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
+                        body: JSON.stringify({ products: batch, gold_rate_14, gold_rate_18, gold_rate_22, labour_rate_less, labour_rate_greater, gst_rate })
                     });
                     const batchData = await batchRes.json();
                     batchData.results.forEach(p => {
