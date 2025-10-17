@@ -176,6 +176,8 @@
             const data = await res.json();
             const allProducts = data.products;
 
+            console.log(allProducts);
+
             const batchSize = 10;
             const gold_rate_14 = parseFloat(document.getElementById("gold_rate_14").value);
             const gold_rate_18 = parseFloat(document.getElementById("gold_rate_18").value);
@@ -198,7 +200,10 @@
                     });
                     const batchData = await batchRes.json();
                     batchData.results.forEach(p => {
-                        if (p.status === "success") successfulProducts.push(p);
+                        if (p.status === "success") {
+                          console.log('p');
+                          successfulProducts.push(p)
+                        }
                         else failedProducts.push(p);
                     });
                 } catch(err){
