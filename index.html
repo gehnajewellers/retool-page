@@ -206,10 +206,11 @@
                         }
                         else failedProducts.push(p);
                     });
+                    console.log("Batch results:", batchData.results);
                 } catch(err){
                     failedProducts.push(...batch.map(p => ({ ...p, status: "failed", error: err.message })));
                 }
-                console.log("Batch results:", batchData.results);
+               
             }
 
             document.getElementById("status").innerText = `✅ Updated ${successfulProducts.length} products successfully.`;
