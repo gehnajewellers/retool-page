@@ -111,6 +111,10 @@
         <input type="number" id="gold_rate_18" required>
       </div>
       <div class="block">
+        <label>Gold Rate 22KT (₹/gm):</label>
+        <input type="number" id="gold_rate_22" required>
+      </div>
+      <div class="block">
         <label>Labour Rate for greater than 5gm (₹/gm):</label>
         <input type="number" id="labour_rate_greater" required>
       </div>
@@ -124,74 +128,97 @@
       </div>
       <button type="submit">Update All Products</button>
     </form>
-    <button class="get-product"></button>
     <p id="status"></p>
+     <div id="error"></div>
   </div>
 
   <script>
 
-    document.querySelector('.get-product').addEventListener('click' , async()=>{
+    const form = document.getElementById("rateForm");
+
+    // List of all input fields
+    const fields = [
+        "gold_rate_14",
+        "gold_rate_18",
+        "gold_rate_22",
+        "labour_rate_greater",
+        "labour_rate_less",
+        "gst_rate"
+    ];
+
+    // On page load: populate fields from localStorage if available
+    window.addEventListener("DOMContentLoaded", () => {
+        fields.forEach(fieldId => {
+        const storedValue = localStorage.getItem(fieldId);
+            if (storedValue !== null) {
+                document.getElementById(fieldId).value = storedValue;
+            }
+        });
+    });
+
+
+
+    // posting the form data
+    document.getElementById("rateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        document.getElementById("status").innerText = "⏳ Updating prices...";
+        document.getElementById("error").innerHTML = "";
+
+        // Save current form values to localStorage
+        fields.forEach(fieldId => {
+            const value = document.getElementById(fieldId).value;
+            localStorage.setItem(fieldId, value);
+        });
+
         try{
             const res = await fetch("https://retool-server.vercel.app/api/get-product-ids");
             const data = await res.json();
             const allProducts = data.products;
 
             const batchSize = 10;
-            const gold_rate_14 = 8500;
-            const gold_rate_18 = 10500;
-            const labour_rate_less = 2500;
-            const labour_rate_greater = 2000;
-            const gst_rate = 3;
+            const gold_rate_14 = parseFloat(document.getElementById("gold_rate_14").value);
+            const gold_rate_18 = parseFloat(document.getElementById("gold_rate_18").value);
+            const gold_rate_22 = parseFloat(document.getElementById("gold_rate_22").value);
+            const labour_rate_less = parseFloat(document.getElementById("labour_rate_less").value);
+            const labour_rate_greater = parseFloat(document.getElementById("labour_rate_greater").value);
+            const gst_rate = parseFloat(document.getElementById("gst_rate").value);
+
+            const failedProducts = [];
+            const successfulProducts = [];
 
             for (let i = 0; i < allProducts.length; i += batchSize) {
                 const batch = allProducts.slice(i, i + batchSize);
                 console.log(`Updating batch ${i / batchSize + 1}...`);
-
-                const batchRes = await fetch("https://retool-server.vercel.app/api/update-products-batch", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ products: batch, gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
-                });
-
-                const batchData = await batchRes.json();
+                try{
+                    const batchRes = await fetch("https://retool-server.vercel.app/api/update-products-batch", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ products: batch, gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
+                    });
+                    const batchData = await batchRes.json();
+                    batchData.results.forEach(p => {
+                        if (p.status === "success") successfulProducts.push(p);
+                        else failedProducts.push(p);
+                    });
+                } catch(err){
+                    failedProducts.push(...batch.map(p => ({ ...p, status: "failed", error: err.message })));
+                }
                 console.log("Batch results:", batchData.results);
             }
 
-
-            console.log(allProducts);
+            document.getElementById("status").innerText = `✅ Updated ${successfulProducts.length} products successfully.`;
+            if (failedProducts.length > 0) {
+                const errorDiv = document.getElementById("error");
+                failedProducts.forEach(p => {
+                const pEl = document.createElement("p");
+                pEl.innerText = `❌ ${p.title}: ${p.error}`;
+                errorDiv.appendChild(pEl);
+                });
+            }
         }catch(err){
-            console.error("Error while fetching:", err);
+             document.getElementById("status").innerText = "❌ Something went wrong!";
         }
-    })
-
-    // posting the form data
-    document.getElementById("rateForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const gold_rate_14 = parseFloat(document.getElementById("gold_rate_14").value);
-      const gold_rate_18 = parseFloat(document.getElementById("gold_rate_18").value);
-      const labour_rate_less = parseFloat(document.getElementById("labour_rate_less").value);
-      const labour_rate_greater = parseFloat(document.getElementById("labour_rate_greater").value);
-      const gst_rate = parseFloat(document.getElementById("gst_rate").value);
-
-      document.getElementById("status").innerText = "⏳ Updating prices...";
-
-      try {
-        const res = await fetch("https://retool-server.vercel.app/api/update-prices", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gold_rate_14, gold_rate_18, labour_rate_less, labour_rate_greater, gst_rate })
-        });
-
-        const result = await res.json();
-        if (res.ok) {
-          document.getElementById("status").innerText = `✅ Updated ${result.updatedCount} products successfully!`;
-        } else {
-          document.getElementById("status").innerText = `❌ Error: ${result.error}`;
-        }
-      } catch (err) {
-        document.getElementById("status").innerText = "❌ Something went wrong!";
-      }
     });
   </script>
 </body>
